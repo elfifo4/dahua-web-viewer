@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+apps/web/dist/
+apps/server/dist/
+
+# environment & secrets — never commit
+.env
+.env.local
+
+# runtime files (generated go2rtc config contains credentials)
+.runtime/
+
+# misc
+.DS_Store
+*.log
+
+# IDE
+.idea/
