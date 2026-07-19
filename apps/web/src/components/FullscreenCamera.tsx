@@ -6,13 +6,29 @@ import { api } from "../lib/api";
 import { VideoPlayer } from "./VideoPlayer";
 
 /**
- * Single-camera view: main stream, wheel/drag zoom & pan,
- * audio toggle, snapshot download, native fullscreen.
+ * H.265 over WebRTC is unreliable outside Apple hardware decode paths —
+ * Android in particular renders smeared frames even when it negotiates the
+ * codec, so treat it as unsupported there regardless of what it claims.
+ */
+function canPlayHevcWebrtc(): boolean {
+  if (/android/i.test(navigator.userAgent)) return false;
+  const codecs = RTCRtpReceiver.getCapabilities?.("video")?.codecs ?? [];
+  return codecs.some((c) => c.mimeType.toLowerCase() === "video/h265");
+}
+
+type Quality = "main" | "sub";
+
+/**
+ * Single-camera view: main stream (or sub when the device can't decode it),
+ * wheel/drag zoom & pan, audio toggle, snapshot download, native fullscreen.
  */
 export function FullscreenCamera({ channel }: { channel: ChannelSummary }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [muted, setMuted] = useState(true);
+  const [quality, setQuality] = useState<Quality>(() =>
+    channel.encode?.main?.codec === "H.265" && !canPlayHevcWebrtc() ? "sub" : "main",
+  );
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const drag = useRef<{ x: number; y: number } | null>(null);
@@ -70,7 +86,7 @@ export function FullscreenCamera({ channel }: { channel: ChannelSummary }) {
     void stageRef.current?.requestFullscreen?.();
   };
 
-  const main = channel.encode?.main;
+  const active = channel.encode?.[quality];
 
   return (
     <div className="flex h-full flex-col">
@@ -85,14 +101,23 @@ export function FullscreenCamera({ channel }: { channel: ChannelSummary }) {
           </Link>
           <div>
             <h2 className="text-sm font-semibold">{channel.name}</h2>
-            {main && main.width > 0 && (
+            {active && active.width > 0 && (
               <p className="text-xs text-ink-dim">
-                {main.codec} · {main.width}×{main.height} · {main.fps} fps · {main.bitrateKbps} kbps
+                {active.codec} · {active.width}×{active.height} · {active.fps} fps ·{" "}
+                {active.bitrateKbps} kbps
               </p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            title={quality === "main" ? "Full quality (tap for smooth/compatible)" : "Compatibility stream (tap for full quality)"}
+            onClick={() => setQuality((q) => (q === "main" ? "sub" : "main"))}
+            className="flex h-8 items-center justify-center rounded-lg border border-edge px-2 text-xs font-semibold text-ink-dim transition-colors hover:border-accent/60 hover:text-ink"
+          >
+            {quality === "main" ? "HD" : "SD"}
+          </button>
           <ToolbarButton
             label={muted ? "Unmute" : "Mute"}
             onClick={() => setMuted((m) => !m)}
@@ -126,7 +151,7 @@ export function FullscreenCamera({ channel }: { channel: ChannelSummary }) {
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
         >
           <VideoPlayer
-            streamName={channel.streams.main}
+            streamName={channel.streams[quality]}
             muted={muted}
             posterUrl={api.snapshotUrl(channel.channel)}
             className="h-full"

@@ -41,6 +41,7 @@ launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 sleep 2
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
 
-echo "Installed. The viewer is now available at http://localhost:8080"
+PORT="$(grep -E '^SERVER_PORT=' "$REPO_ROOT/.env" 2>/dev/null | cut -d= -f2)"
+echo "Installed. The viewer is now available at http://localhost:${PORT:-8080}"
 echo "Logs: $REPO_ROOT/.runtime/agent.log"
 echo "To uninstall: launchctl bootout gui/$(id -u)/$LABEL && rm '$PLIST'"
