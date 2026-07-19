@@ -112,6 +112,7 @@ All settings live in the repo-root `.env` (see [.env.example](.env.example)):
 | `DVR_USER` / `DVR_PASS` | — | **Local** DVR account |
 | `DVR_CHANNELS` | `5` | Number of camera tiles |
 | `SERVER_PORT` | `8787` | Backend + web UI port |
+| `SERVER_HOST` | `127.0.0.1` | `0.0.0.0` opens the viewer to your LAN (see below) |
 | `GO2RTC_API_PORT` / `GO2RTC_WEBRTC_PORT` | `1984` / `8555` | go2rtc internals |
 | `GO2RTC_BIN` | *(bundled)* | Optional path to your own go2rtc build |
 
@@ -139,6 +140,30 @@ apps/web/      React frontend
 docs/          DVR capability investigation report
 scripts/       LaunchAgent installer (macOS service mode)
 ```
+
+## Watching from other devices on your network
+
+By default everything binds to `127.0.0.1` (this machine only). To watch from a
+phone or another computer on your home network, set in `.env`:
+
+```
+SERVER_HOST=0.0.0.0
+```
+
+restart the app (or re-run the install script), and open
+`http://<machine-name>.local:8787` — e.g. `http://my-macbook.local:8787` — or
+`http://<the-machine's-LAN-IP>:8787` from any device on the same Wi-Fi.
+The `.local` name (Bonjour/mDNS) survives router IP reshuffles; the raw IP may
+change unless you give the machine a DHCP reservation.
+
+Notes:
+- WebRTC media flows directly from go2rtc (port 8555), which already listens on
+  all interfaces; no extra configuration needed.
+- macOS may ask "Allow node to accept incoming connections?" the first time —
+  approve it (or add node under System Settings → Network → Firewall).
+- **There is no login screen.** Anyone on your Wi-Fi can view the cameras while
+  this is enabled — only use it on a network you trust, and never port-forward
+  it to the internet.
 
 ## Security model
 

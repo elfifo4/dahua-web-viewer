@@ -40,7 +40,7 @@ const shutdown = async (): Promise<void> => {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
-await app.listen({ port: config.server.port, host: "127.0.0.1" });
+await app.listen({ port: config.server.port, host: config.server.host });
 app.log.info(
   `API on http://127.0.0.1:${config.server.port} — credentials ${hasCredentials ? "loaded" : "MISSING (copy .env.example to .env)"}`,
 );
