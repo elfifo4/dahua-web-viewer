@@ -9,6 +9,9 @@ Everything runs on your own machine; camera credentials never leave it.
 Built as a lightweight alternative to SmartPSS / the DVR's built-in web page for
 day-to-day viewing — sub-second latency via WebRTC, with zero video transcoding.
 
+![Camera wall](docs/screenshot.png)
+*The camera wall (live feeds blurred for privacy).*
+
 ## Features
 
 - **Camera wall** — responsive dark grid of all channels (low-bandwidth sub-streams)
