@@ -5,17 +5,6 @@ import type { ChannelSummary } from "../lib/api";
 import { api } from "../lib/api";
 import { VideoPlayer } from "./VideoPlayer";
 
-/**
- * H.265 over WebRTC is unreliable outside Apple hardware decode paths —
- * Android in particular renders smeared frames even when it negotiates the
- * codec, so treat it as unsupported there regardless of what it claims.
- */
-function canPlayHevcWebrtc(): boolean {
-  if (/android/i.test(navigator.userAgent)) return false;
-  const codecs = RTCRtpReceiver.getCapabilities?.("video")?.codecs ?? [];
-  return codecs.some((c) => c.mimeType.toLowerCase() === "video/h265");
-}
-
 type Quality = "main" | "sub";
 
 /**
@@ -26,8 +15,12 @@ export function FullscreenCamera({ channel }: { channel: ChannelSummary }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [muted, setMuted] = useState(true);
+  // Browser codec capability reports are not sufficient for H.265 WebRTC:
+  // Chromium can advertise/accept HEVC while never producing a decoded frame.
+  // Start with the H.264 compatibility stream whenever main is HEVC. Users can
+  // still opt into the main stream explicitly with the HD button.
   const [quality, setQuality] = useState<Quality>(() =>
-    channel.encode?.main?.codec === "H.265" && !canPlayHevcWebrtc() ? "sub" : "main",
+    channel.encode?.main?.codec.toUpperCase() === "H.265" ? "sub" : "main",
   );
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
