@@ -58,7 +58,14 @@ export function FullscreenCamera({
       ) {
         return;
       }
-      if (event.key === "ArrowRight") {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (document.fullscreenElement) {
+          void document.exitFullscreen();
+        } else {
+          void navigate({ to: "/" });
+        }
+      } else if (event.key === "ArrowRight") {
         event.preventDefault();
         move(1);
       } else if (event.key === "ArrowLeft") {

@@ -54,7 +54,9 @@ The design principle is **integration over duplication**: live streams, snapshot
 names and health all come from interfaces the DVR already exposes (RTSP, CGI,
 ONVIF). The DVR's own web UI remains the admin console for configuration. See
 [docs/INVESTIGATION.md](docs/INVESTIGATION.md) for the full capability
-investigation (HTTP/HTTPS/RTSP/ONVIF/CGI) that led to this architecture.
+investigation (HTTP/HTTPS/RTSP/ONVIF/CGI) that led to this architecture. Deferred
+product and technical decisions are tracked in
+[docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md).
 
 ## Requirements
 
@@ -137,7 +139,7 @@ apps/server/   Fastify + TypeScript backend
 apps/web/      React frontend
   src/lib/webrtc.ts         minimal WHEP client (SDP exchange via the backend)
   src/components/           CameraTile, VideoPlayer, FullscreenCamera, Header
-docs/          DVR capability investigation report
+docs/          DVR investigation report + open technical decisions
 scripts/       LaunchAgent installer (macOS service mode)
 ```
 
