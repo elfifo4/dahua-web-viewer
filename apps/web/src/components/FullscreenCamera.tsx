@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Camera, Maximize, Volume2, VolumeX, ZoomIn } from "lucide-react";
 import type { ChannelSummary } from "../lib/api";
 import { api } from "../lib/api";
@@ -11,7 +11,14 @@ type Quality = "main" | "sub";
  * Single-camera view: main stream (or sub when the device can't decode it),
  * wheel/drag zoom & pan, audio toggle, snapshot download, native fullscreen.
  */
-export function FullscreenCamera({ channel }: { channel: ChannelSummary }) {
+export function FullscreenCamera({
+  channel,
+  channelIds,
+}: {
+  channel: ChannelSummary;
+  channelIds: number[];
+}) {
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const [muted, setMuted] = useState(true);
@@ -25,6 +32,44 @@ export function FullscreenCamera({ channel }: { channel: ChannelSummary }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const drag = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const move = (direction: 1 | -1) => {
+      if (channelIds.length < 2) return;
+      const currentIndex = channelIds.indexOf(channel.channel);
+      if (currentIndex < 0) return;
+      const nextIndex = (currentIndex + direction + channelIds.length) % channelIds.length;
+      const nextChannel = channelIds[nextIndex];
+      if (nextChannel === undefined) return;
+      void navigate({
+        to: "/camera/$channel",
+        params: { channel: String(nextChannel) },
+      });
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        move(1);
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        move(-1);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [channel.channel, channelIds, navigate]);
 
   const resetView = useCallback(() => {
     setZoom(1);

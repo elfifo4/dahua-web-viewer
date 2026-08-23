@@ -60,7 +60,13 @@ function CameraPage() {
   if (isPending) return <CenteredSpinner />;
   const summary = data?.channels.find((c) => c.channel === Number(channel));
   if (!summary) return <p className="p-8 text-sm text-err">Unknown camera “{channel}”.</p>;
-  return <FullscreenCamera channel={summary} />;
+  return (
+    <FullscreenCamera
+      key={summary.channel}
+      channel={summary}
+      channelIds={data?.channels.map((item) => item.channel) ?? []}
+    />
+  );
 }
 
 const cameraRoute = createRoute({
