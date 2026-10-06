@@ -180,6 +180,17 @@ Notes:
 
 - **"Stream engine offline"** — go2rtc isn't running; check credentials in
   `.env` and the `[go2rtc]` lines in the server log.
+- **The viewer opens, but every camera is offline after adding or reconnecting a
+  network device** — `DVR_HOST` may now belong to another device because the
+  router reassigned an unreserved DHCP address. Open that address directly or
+  check the router's connected-device list and verify that it identifies the
+  Dahua DVR/XVR, not a printer or another appliance. Update `DVR_HOST` in `.env`
+  to the DVR's current address, then re-run `./scripts/install-launch-agent.sh`.
+  Finally, create a DHCP reservation for the DVR's MAC address so the address
+  cannot move or be assigned to another device. Some routers refuse to reserve
+  an address while it is actively leased; if so, power off the DVR briefly,
+  create the reservation, power it back on, and verify all streams. Do not work
+  around the conflict by assigning an arbitrary address while the DVR is live.
 - **Tiles stay "Offline"** — verify RTSP manually:
   `ffprobe "rtsp://USER:PASS@<DVR_IP>:554/cam/realmonitor?channel=1&subtype=1"`
   and remember: local DVR account, not the DMSS cloud login.
